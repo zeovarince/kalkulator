@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Kalkulator Sederhana")
-        self.setGeometry(200, 200, 300, 300)
+        self.setGeometry(250, 250, 350, 350)
 
         #widget tampilan
         self.output = QLineEdit("0")
@@ -131,4 +131,3 @@ if __name__ == "__main__":
     win = MainWindow()
     win.show()
     app.exec()
-        
