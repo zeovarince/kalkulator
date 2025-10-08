@@ -3,12 +3,12 @@ from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QApplication,
+    QGridLayout,
     QLabel,
     QMainWindow,
     QWidget,
     QPushButton,
     QVBoxLayout,
-    QHBoxLayout,
     QLineEdit,
     QTabWidget,
     QListWidget,
@@ -20,7 +20,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Kalkulator Sederhana")
-        self.setGeometry(200, 200, 300, 300)
+        self.setGeometry(300, 300, 300, 300)
 
         # ====== TAB WIDGET ======
         self.tabs = QTabWidget()
@@ -34,67 +34,65 @@ class MainWindow(QMainWindow):
         self.history_tab = QWidget()
         self.tabs.addTab(self.history_tab, "Riwayat")
 
-        # ====== Kalkulator ======
+        # ====== Output ======
         self.output = QLineEdit("0")
         self.output.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.output.setReadOnly(True)
         self.output.setFixedHeight(50)
 
-        # Inisialisasi tombol
+        # ====== Layout Tombol (4x4 Grid) ======
+        grid = QGridLayout()
+
+        # Baris 1
         self.cn = QPushButton("CN")
-        self.add = QPushButton("+")
-        self.min = QPushButton("-")
-        self.multi = QPushButton("*")
         self.bagi = QPushButton("/")
-        self.dot = QPushButton(".")
-        self.equal = QPushButton("=")
-        self.nine = QPushButton("9")
-        self.eight = QPushButton("8")
+        self.multi = QPushButton("*")
+        self.del_btn = QPushButton("DEL")
+
+        # Baris 2
         self.six = QPushButton("6")
-        self.four = QPushButton("4")
-        self.three = QPushButton("3")
+        self.eight = QPushButton("8")
+        self.nine = QPushButton("9")
+        self.min = QPushButton("-")
+
+        # Baris 3
         self.two = QPushButton("2")
+        self.three = QPushButton("3")
+        self.four = QPushButton("4")
+        self.add = QPushButton("+")
+
+        # Baris 4
         self.one = QPushButton("1")
         self.zero = QPushButton("0")
+        self.dot = QPushButton(".")
+        self.equal = QPushButton("=")
 
-        # Layout vertikal utama
-        background = QVBoxLayout()
-        background.addWidget(self.output)
+        # Tambahkan tombol ke grid sesuai posisi
+        grid.addWidget(self.cn, 0, 0)
+        grid.addWidget(self.bagi, 0, 1)
+        grid.addWidget(self.multi, 0, 2)
+        grid.addWidget(self.del_btn, 0, 3)
 
-        # Baris tombol (pakai QHBoxLayout)
-        row1 = QHBoxLayout()
-        row1.addWidget(self.cn)
-        row1.addWidget(self.add)
-        row1.addWidget(self.min)
+        grid.addWidget(self.six, 1, 0)
+        grid.addWidget(self.eight, 1, 1)
+        grid.addWidget(self.nine, 1, 2)
+        grid.addWidget(self.min, 1, 3)
 
-        row2 = QHBoxLayout()
-        row2.addWidget(self.nine)
-        row2.addWidget(self.eight)
-        row2.addWidget(self.multi)
+        grid.addWidget(self.two, 2, 0)
+        grid.addWidget(self.three, 2, 1)
+        grid.addWidget(self.four, 2, 2)
+        grid.addWidget(self.add, 2, 3)
 
-        row3 = QHBoxLayout()
-        row3.addWidget(self.six)
-        row3.addWidget(self.four)
-        row3.addWidget(self.bagi)
+        grid.addWidget(self.one, 3, 0)
+        grid.addWidget(self.zero, 3, 1)
+        grid.addWidget(self.dot, 3, 2)
+        grid.addWidget(self.equal, 3, 3)
 
-        row4 = QHBoxLayout()
-        row4.addWidget(self.three)
-        row4.addWidget(self.two)
-        row4.addWidget(self.dot)
-
-        row5 = QHBoxLayout()
-        row5.addWidget(self.one)
-        row5.addWidget(self.zero)
-        row5.addWidget(self.equal)
-
-        # Masukkan semua baris ke layout utama (VBox)
-        background.addLayout(row1)
-        background.addLayout(row2)
-        background.addLayout(row3)
-        background.addLayout(row4)
-        background.addLayout(row5)
-
-        self.calc_tab.setLayout(background)
+        # ====== Gabungkan ======
+        layout = QVBoxLayout()
+        layout.addWidget(self.output)
+        layout.addLayout(grid)
+        self.calc_tab.setLayout(layout)
 
         # ====== Riwayat ======
         self.history_list = QListWidget()
@@ -104,8 +102,10 @@ class MainWindow(QMainWindow):
         self.history_tab.setLayout(layout_history)
 
         # ====== Sinyal Tombol ======
-        for tombol in (self.zero, self.one, self.two, self.three,
-                       self.four, self.six, self.eight, self.nine):
+        for tombol in (
+            self.zero, self.one, self.two, self.three, self.four,
+            self.six, self.eight, self.nine
+        ):
             tombol.clicked.connect(self.pushBut)
 
         for op in (self.add, self.min, self.multi, self.bagi, self.dot):
@@ -113,11 +113,12 @@ class MainWindow(QMainWindow):
 
         self.equal.clicked.connect(self.pushBut)
         self.cn.clicked.connect(self.clear_output)
+        self.del_btn.clicked.connect(self.delete_last)
 
         # ====== Menu Bar ======
         self.create_menu()
 
-    # ====== Fungsi Menu ======
+    # ====== Menu ======
     def create_menu(self):
         menuBar = self.menuBar()
         file_menu = menuBar.addMenu("File")
@@ -125,14 +126,7 @@ class MainWindow(QMainWindow):
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
-    def show_about(self):
-        QMessageBox.information(
-            self,
-            "Tentang",
-            "Kalkulator Sederhana\nDibuat dengan PyQt6."
-        )
-
-    # ====== Kalkulator ======
+    # ====== Logika Kalkulator ======
     def pushBut(self):
         operan = ["+", "-", "*", "/"]
         angka = "98643210"
@@ -159,7 +153,6 @@ class MainWindow(QMainWindow):
                 self.output.setText("Err")
             else:
                 self.output.setText(str(hasil))
-                # Tambah ke Riwayat
                 self.history_list.addItem(f"{front} = {hasil}")
             return
         self.output.setText(front + text)
@@ -172,6 +165,13 @@ class MainWindow(QMainWindow):
 
     def clear_output(self):
         self.output.setText("0")
+
+    def delete_last(self):
+        teks = self.output.text()
+        if len(teks) > 1:
+            self.output.setText(teks[:-1])
+        else:
+            self.output.setText("0")
 
 
 if __name__ == "__main__":
