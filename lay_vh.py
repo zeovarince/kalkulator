@@ -119,6 +119,43 @@ class MainWindow(QMainWindow):
         exit_action = QAction("Keluar", self)
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
+    
+    # Menu Operasi
+        operasi_menu = menuBar.addMenu("Operasi")
+
+        # Tambahkan semua operasi ke menu
+        ops = {
+            "Tambah (+)": "+",
+            "Kurang (-)": "-",
+            "Kali (*)": "*",
+            "Bagi (/)": "/",
+            "Hapus (DEL)": "DEL",
+            "Clear (CN)": "CN",
+        }
+
+        for nama, simbol in ops.items():
+            act = QAction(nama, self)
+            act.triggered.connect(lambda _, s=simbol: self.menu_operasi(s))
+            operasi_menu.addAction(act)
+
+    def menu_operasi(self, simbol):
+        """Menjalankan operasi dari menu"""
+        if simbol == "CN":
+            self.clear_output()
+        elif simbol == "DEL":
+            self.delete_last()
+        else:
+            # Sama seperti tombol operasi
+            front = self.output.text()
+            if self.output.text() == "0":
+                if simbol == "-":
+                    self.output.setText("-")
+                else:
+                    self.output.setText("0" + simbol)
+            elif front[-1] in ["+", "-", "*", "/"]:
+                self.output.setText(front[:-1] + simbol)
+            else:
+                self.output.setText(front + simbol)        
 
     def show_about(self):
         QMessageBox.information(

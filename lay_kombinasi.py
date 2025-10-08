@@ -27,31 +27,38 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
 
-        # Tab 1: Kalkulator
+        # Tab Kalkulator
         self.calc_tab = QWidget()
         self.tabs.addTab(self.calc_tab, "Kalkulator")
 
-        # Tab 2: Riwayat
+        # Tab Riwayat
         self.history_tab = QWidget()
         self.tabs.addTab(self.history_tab, "Riwayat")
 
         # ====== Display ======
         self.output = QLineEdit("0")
         self.output.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.output.setReadOnly(True)
+        self.output.setReadOnly(False)
         self.output.setFixedHeight(50)
 
-        # ====== Buat Tombol ======
+        # ====== Baris Horizontal CN / * DEL ======
+        hbox_top = QHBoxLayout()
+        tombol_atas = ["CN", "/", "*", "DEL"]
+        self.tombol_map = {}
+
+        for teks in tombol_atas:
+            btn = QPushButton(teks)
+            btn.setFixedHeight(45)
+            hbox_top.addWidget(btn)
+            self.tombol_map[teks] = btn
+
+        # ====== Tombol Grid Bawah ======
         tombol_labels = [
-            ["CN", "/", "*", "DEL"],
             ["6", "8", "9", "-"],
             ["2", "3", "4", "+"],
             ["1", "0", ".", "="],
         ]
 
-        self.tombol_map = {}  # simpan tombol untuk koneksi sinyal nanti
-
-        # ====== Susun Tombol dengan Grid ======
         grid = QGridLayout()
         for row, baris in enumerate(tombol_labels):
             for col, teks in enumerate(baris):
@@ -60,10 +67,11 @@ class MainWindow(QMainWindow):
                 grid.addWidget(btn, row, col)
                 self.tombol_map[teks] = btn
 
-        # ====== Gabungkan Grid dengan VBox ======
+        # ====== Gabungkan Semua Layout ======
         vbox = QVBoxLayout()
         vbox.addWidget(self.output)
-        vbox.addLayout(grid)
+        vbox.addLayout(hbox_top)  # baris horizontal CN / * DEL
+        vbox.addLayout(grid)      # grid angka dan operator
         self.calc_tab.setLayout(vbox)
 
         # ====== Riwayat ======
@@ -76,7 +84,6 @@ class MainWindow(QMainWindow):
         # ====== Sinyal Tombol ======
         angka = ["0", "1", "2", "3", "4", "6", "8", "9"]
         operasi = ["+", "-", "*", "/", "."]
-
         for a in angka:
             self.tombol_map[a].clicked.connect(self.pushBut)
         for o in operasi:
@@ -86,10 +93,9 @@ class MainWindow(QMainWindow):
         self.tombol_map["CN"].clicked.connect(self.clear_output)
         self.tombol_map["DEL"].clicked.connect(self.delete_last)
 
-        # ====== Menu Bar ======
+        # ====== Menu ======
         self.create_menu()
 
-    # ====== Fungsi Menu ======
     def create_menu(self):
         menuBar = self.menuBar()
         file_menu = menuBar.addMenu("File")
@@ -97,7 +103,37 @@ class MainWindow(QMainWindow):
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
-    # ====== Fungsi Kalkulator ======
+        operasi_menu = menuBar.addMenu("Operasi")
+        ops = {
+            "Tambah (+)": "+",
+            "Kurang (-)": "-",
+            "Kali (*)": "*",
+            "Bagi (/)": "/",
+            "Hapus (DEL)": "DEL",
+            "Clear (CN)": "CN",
+        }
+        for nama, simbol in ops.items():
+            act = QAction(nama, self)
+            act.triggered.connect(lambda _, s=simbol: self.menu_operasi(s))
+            operasi_menu.addAction(act)
+
+    def menu_operasi(self, simbol):
+        if simbol == "CN":
+            self.clear_output()
+        elif simbol == "DEL":
+            self.delete_last()
+        else:
+            front = self.output.text()
+            if self.output.text() == "0":
+                if simbol == "-":
+                    self.output.setText("-")
+                else:
+                    self.output.setText("0" + simbol)
+            elif front[-1] in ["+", "-", "*", "/"]:
+                self.output.setText(front[:-1] + simbol)
+            else:
+                self.output.setText(front + simbol)
+
     def pushBut(self):
         operan = ["+", "-", "*", "/"]
         angka = "98643210"
